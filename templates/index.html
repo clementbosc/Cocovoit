@@ -44,7 +44,6 @@
                                 <a href="/supprimer-voyageur?id={{ i }}" class=""><i class="fas fa-trash"></i></a>
                                 <button type="submit" class="text-primary" style="background: none; border: none; outline: none; cursor: pointer;"><i class="fas fa-check"></i>
                                 </button>
-                                <!--<a data-id="{{ i }}" class="edit-line-btn"></a>-->
                             </td>
                         </form>
 
@@ -78,7 +77,7 @@
                     </label>
                     <div class="input-group">
                         <input type="text" name="km_cost" class="form-control" id="km_cost_input"
-                               value="{{ s['km_cost'] }}">
+                               value="{{ trajet.km_cost }}">
                         <div class="input-group-append">
                             <div class="input-group-text">€/km</div>
                         </div>
@@ -208,7 +207,7 @@
         crossorigin="anonymous"></script>
 
 <script>
-    var total_cost = {{ trajet.total_cost() }}
+    var total_cost = {{ trajet.total_cost() if lines|length > 1 else 0.0 }}
     $('[data-toggle="tooltip"]').tooltip();
 
     $('.alloc_values').on('input', function(){

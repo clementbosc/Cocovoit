@@ -14,15 +14,13 @@ sess.init_app(app)
 
 @app.route('/', methods=['GET'])
 def main():
-	t = None
-	# session['alloc'] = []
-	# del session['km_cost']
-	print(session['lines'])
-	if len(session['lines']) > 1:
+	t = Trajet([], 1.)
+	if 'lines' in session and len(session['lines']) > 1:
 		t = Trajet(session['lines'], (session['km_cost'] if (
 				'km_cost' in session and session['km_cost'] is not None and session['km_cost'] > 0) else 1.))
 
-	return render_template('index.html', s=session, lines=session['lines'], trajet=t, allocs=session['alloc'])
+	return render_template('index.html', s=session, lines=(session['lines'] if 'lines' in session else []), trajet=t,
+						   allocs=(session['alloc'] if 'alloc' in session else []))
 
 
 @app.route('/ajouter-voyageur')
@@ -41,7 +39,7 @@ def add_traveler():
 @app.route('/modifier-voyageur')
 def edit_traveler():
 	session['lines'][int(request.args.get('id'))] = (
-	request.args.get('voyageurs'), request.args.get('arrets'), int(request.args.get('distances')))
+		request.args.get('voyageurs'), request.args.get('arrets'), int(request.args.get('distances')))
 	session['lines'].sort(key=lambda tup: tup[2])
 	return redirect("/")
 
@@ -50,7 +48,7 @@ def edit_traveler():
 def edit_alloc():
 	values = [float(x) for x in request.args.getlist('alloc_values')]
 	session['alloc'][int(request.args.get('id'))] = (
-	request.args.get('alloc_name'), values, reduce((lambda x, y: x + y), values))
+		request.args.get('alloc_name'), values, reduce((lambda x, y: x + y), values))
 	return redirect("/")
 
 

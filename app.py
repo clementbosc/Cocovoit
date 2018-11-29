@@ -14,11 +14,18 @@ sess.init_app(app)
 
 @app.route('/', methods=['GET'])
 def main():
-	t = Trajet([], 1.)
+	t = Trajet([],
+			   (session['km_cost'] if (
+					   'km_cost' in session and session['km_cost'] is not None and session['km_cost'] > 0) else 1.),
+			   (session['departure'] if (
+					   'departure' in session and session['departure'] is not None) else 'Toulouse')
+			   )
 	if 'lines' in session and len(session['lines']) > 1:
 		t = Trajet(session['lines'], (session['km_cost'] if (
-				'km_cost' in session and session['km_cost'] is not None and session['km_cost'] > 0) else 1.))
-
+				'km_cost' in session and session['km_cost'] is not None and session['km_cost'] > 0) else 1.),
+				   (session['departure'] if (
+						   'departure' in session and session['departure'] is not None) else 'Toulouse')
+				   )
 	return render_template('index.html', s=session, lines=(session['lines'] if 'lines' in session else []), trajet=t,
 						   allocs=(session['alloc'] if 'alloc' in session else []))
 
@@ -72,6 +79,7 @@ def delete_traveler():
 @app.route('/configuration')
 def config():
 	session['km_cost'] = float(request.args.get('km_cost'))
+	session['departure'] = request.args.get('departure')
 	return redirect("/")
 
 

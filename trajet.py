@@ -3,7 +3,7 @@ from itertools import combinations
 
 class Trajet:
 
-	def __init__(self, data, km_cost):
+	def __init__(self, data, km_cost, departure=None):
 		self.arrets = []
 		self.voyageurs = []
 		self.distances = []
@@ -13,9 +13,36 @@ class Trajet:
 			self.distances.append(d[2])
 
 		self.km_cost = km_cost
+		self.departure = departure
 
 	def total_cost(self):
 		return self.distances[len(self.distances) - 1] * self.km_cost
+
+	def dist_to_prev(self):
+		d = []
+		for i in range(len(self.distances)):
+			if i == 0:
+				d.append(self.distances[i])
+			else:
+				d.append(self.distances[i] - self.distances[i - 1])
+
+		return d
+
+	def total_length(self):
+		return self.distances[len(self.distances) - 1]
+
+	def timeline(self):
+		tl = []
+		voyageur_par_arret = {}
+		for i in range(len(self.arrets)):
+			if self.arrets[i] not in voyageur_par_arret:
+				voyageur_par_arret[self.arrets[i]] = []
+			voyageur_par_arret[self.arrets[i]].append(self.voyageurs[i])
+
+		for a in voyageur_par_arret:
+			tl.append((self.dist_to_prev()[self.arrets.index(a)], a, voyageur_par_arret[a]))
+
+		return tl
 
 	def alone_costs(self):
 		costs = []
@@ -90,7 +117,8 @@ class Trajet:
 
 		for k, v in map.items():
 			if v > ag.get(k):
-				msg = "Le sous-groupe " + k + " paie " + str(round(v, 2)) + "€ contre " + str(round(ag.get(k), 2)) + "€ si il était seul"
+				msg = "Le sous-groupe " + k + " paie " + str(round(v, 2)) + "€ contre " + str(
+					round(ag.get(k), 2)) + "€ si il était seul"
 				return False, msg
 
 		return True, ''

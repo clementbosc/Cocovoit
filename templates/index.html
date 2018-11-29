@@ -8,9 +8,74 @@
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css"
           integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
     <style>
-        .alloc_submit_button[disabled]{
-            color: #828282!important;
-            cursor: default!important;
+        .alloc_submit_button[disabled] {
+            color: #828282 !important;
+            cursor: default !important;
+        }
+
+        .travel {
+            display: flex;
+            align-items: flex-end;
+            width: 1000px;
+            padding: 0;
+            margin: auto;
+        }
+
+        .travel .steps {
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .travel li {
+            list-style: none;
+            display: flex;
+            flex-direction: row;
+            align-items: flex-end;
+        }
+
+        .travel .tline {
+            text-align: center;
+            border-bottom: 3px solid #007bff;
+            font-size: 12px;
+            position: relative;
+            bottom: 30px;
+        }
+
+        .travel .item {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 60px;
+        }
+
+        .travel li .traveler {
+            text-transform: uppercase;
+            font-weight: 700;
+            font-size: 11px;
+            margin-bottom: 6px;
+        }
+
+        .travel li .circle {
+            width: 60px;
+            height: 60px;
+            background: #fafafa;
+            border-radius: 50%;
+            border: 3px solid #007bff;
+            font-size: 10px;
+            text-align: center;
+            position: relative;
+        }
+
+        .travel li .city {
+            position: absolute;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
     </style>
 </head>
@@ -31,6 +96,7 @@
                     <th>Voyageur</th>
                     <th>Ville</th>
                     <th>Distance au départ</th>
+                    <th>Cout si seul</th>
                     <th></th>
                 </tr>
                 {% for i in range(lines|length) %}
@@ -39,10 +105,13 @@
                             <td><input type="text" name="voyageurs" class="form-control" value="{{ lines[i][0] }}"></td>
                             <td><input type="text" name="arrets" class="form-control" value="{{ lines[i][1] }}"></td>
                             <td><input type="text" name="distances" class="form-control" value="{{ lines[i][2] }}"></td>
+                            <td>{{ lines[i][2]*trajet.km_cost }} €</td>
                             <td>
                                 <input type="hidden" name="id" value="{{ i }}">
                                 <a href="/supprimer-voyageur?id={{ i }}" class=""><i class="fas fa-trash"></i></a>
-                                <button type="submit" class="text-primary" style="background: none; border: none; outline: none; cursor: pointer;"><i class="fas fa-check"></i>
+                                <button type="submit" class="text-primary"
+                                        style="background: none; border: none; outline: none; cursor: pointer;"><i
+                                        class="fas fa-check"></i>
                                 </button>
                             </td>
                         </form>
@@ -56,6 +125,7 @@
                             <td><input type="text" class="form-control" name="voyageurs"></td>
                             <td><input type="text" class="form-control" name="arrets"></td>
                             <td><input type="text" class="form-control" name="distances"></td>
+                            <td></td>
                             <td>
                                 <button type="submit" class="btn btn-primary">Ajouter</button>
                             </td>
@@ -71,6 +141,13 @@
         <div class="col-md-12">
             <h2>Configuration</h2>
             <form action="/configuration" class="form-inline align-items-end">
+                <div class="form-group mr-2" style="flex-direction: column;align-items: baseline;">
+                    <label for="departure_input">
+                        <small>Ville de départ</small>
+                    </label>
+                    <input type="text" name="departure" class="form-control" id="departure_input"
+                           value="{{ trajet.departure }}" required>
+                </div>
                 <div class="form-group mr-2" style="flex-direction: column;align-items: baseline;">
                     <label for="km_cost_input">
                         <small>Coût au kilomètre</small>
@@ -89,6 +166,40 @@
     </div>
 
     {% if lines|length > 1 %}
+
+        <div class="row justify-content-center mb-5">
+            <div class="col-md-12">
+                <ul class="travel">
+                    <li>
+                        <div class="item">
+                            <div class="circle">
+                                <span class="city">{{ trajet.departure }}</span>
+                            </div>
+                        </div>
+                    </li>
+                    <div class="steps">
+                        {% for i in range(trajet.timeline()|length) %}
+                            <li>
+                                <div class="tline"
+                                     style="width: {{ ((trajet.timeline()[i][0] * 940)/trajet.total_length()) - 60 }}px;">{{ trajet.timeline()[i][0] }}
+                                    km
+                                </div>
+                                <div class="item">
+                                    <div class="traveler">{{ ', '.join(trajet.timeline()[i][2]) }}</div>
+                                    <div class="circle">
+                                        <span class="city">{{ trajet.timeline()[i][1] }}</span>
+                                    </div>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </div>
+
+
+                </ul>
+                <h5 class="text-center">Votre trajet</h5>
+            </div>
+        </div>
+
         <div class="row">
             <div class="col-md-12">
                 <h2>Partage des coûts</h2>
@@ -136,16 +247,19 @@
                     {% for a in range(allocs|length) %}
                         <tr>
                             <form action="/modifier-allocation" method="get">
-                                <input type="hidden" class="total_cost_input" data-id="{{ a }}" value="{{ allocs[a][2]|round(2) }}">
+                                <input type="hidden" class="total_cost_input" data-id="{{ a }}"
+                                       value="{{ allocs[a][2]|round(2) }}">
 
                                 <th><input type="text" class="form-control" name="alloc_name"
                                            value="{{ allocs[a][0] }}"></th>
                                 {% for v in allocs[a][1] %}
-                                    <td><input type="text" class="form-control alloc_values" data-id="{{ a }}" name="alloc_values"
+                                    <td><input type="text" class="form-control alloc_values" data-id="{{ a }}"
+                                               name="alloc_values"
                                                value="{{ v|round(2) }}"></td>
                                 {% endfor %}
                                 <td>
-                                    <span class="total_cost {{ 'text-danger' if allocs[a][2] != trajet.total_cost() else '' }}" data-id="{{ a }}">{{ allocs[a][2]|round(2) }} €</span>
+                                    <span class="total_cost {{ 'text-danger' if allocs[a][2] != trajet.total_cost() else '' }}"
+                                          data-id="{{ a }}">{{ allocs[a][2]|round(2) }} €</span>
                                 </td>
                                 <td>
                                     <input type="hidden" name="id" value="{{ a }}">
@@ -158,7 +272,9 @@
                                     {% endif %}
                                     <br>
                                     <a href="supprimer-allocation?id={{ a }}"><i class="fas fa-trash"></i></a>
-                                    <button type="submit" class="text-primary alloc_submit_button" data-id="{{ a }}" style="background: none; border: none; outline: none; cursor: pointer;"><i class="fas fa-check"></i>
+                                    <button type="submit" class="text-primary alloc_submit_button" data-id="{{ a }}"
+                                            style="background: none; border: none; outline: none; cursor: pointer;"><i
+                                            class="fas fa-check"></i>
                                     </button>
                                 </td>
                             </form>
@@ -179,14 +295,17 @@
                             </th>
 
                             {% for s in range(lines|length) %}
-                                <td><input type="text" class="form-control alloc_values" name="alloc_values" data-id="new"
+                                <td><input type="text" class="form-control alloc_values" name="alloc_values"
+                                           data-id="new"
                                            placeholder="Part de {{ lines[s][0] }}" required></td>
                             {% endfor %}
                             <td>
                                 <span class="total_cost" data-id="new">0.0 €</span>
                             </td>
                             <td>
-                                <button type="submit" class="btn btn-primary alloc_submit_button" data-id="new" disabled>Ajouter</button>
+                                <button type="submit" class="btn btn-primary alloc_submit_button" data-id="new"
+                                        disabled>Ajouter
+                                </button>
                             </td>
                         </form>
                     </tr>
@@ -208,25 +327,25 @@
 
 <script>
     var total_cost = {{ trajet.total_cost() if lines|length > 1 else 0.0 }}
-    $('[data-toggle="tooltip"]').tooltip();
+        $('[data-toggle="tooltip"]').tooltip();
 
-    $('.alloc_values').on('input', function(){
+    $('.alloc_values').on('input', function () {
         var sum = 0.0;
         var id = $(this).data('id');
-        $('.alloc_values[data-id="'+id+'"]').each(function(k, v){
+        $('.alloc_values[data-id="' + id + '"]').each(function (k, v) {
             var value = $(v).val();
-            if(value != '')
+            if (value != '')
                 sum += parseFloat($(v).val())
         });
 
-        $('.total_cost[data-id="'+id+'"]').html(sum+' €');
-        $('.total_cost_input[data-id="'+id+'"]').val(sum);
-        if (sum == total_cost){
-            $('.total_cost[data-id="'+id+'"]').removeClass('text-danger')
-            $('.alloc_submit_button[data-id="'+id+'"]').prop('disabled', false);
-        }else{
-            $('.total_cost[data-id="'+id+'"]').addClass('text-danger')
-            $('.alloc_submit_button[data-id="'+id+'"]').prop('disabled', true);
+        $('.total_cost[data-id="' + id + '"]').html(sum + ' €');
+        $('.total_cost_input[data-id="' + id + '"]').val(sum);
+        if (sum == total_cost) {
+            $('.total_cost[data-id="' + id + '"]').removeClass('text-danger')
+            $('.alloc_submit_button[data-id="' + id + '"]').prop('disabled', false);
+        } else {
+            $('.total_cost[data-id="' + id + '"]').addClass('text-danger')
+            $('.alloc_submit_button[data-id="' + id + '"]').prop('disabled', true);
         }
     });
 </script>

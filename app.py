@@ -53,7 +53,7 @@ def edit_traveler():
 
 @app.route('/modifier-allocation')
 def edit_alloc():
-	values = [float(x) for x in request.args.getlist('alloc_values')]
+	values = [float(x.replace(',', '.')) for x in request.args.getlist('alloc_values')]
 	session['alloc'][int(request.args.get('id'))] = (
 		request.args.get('alloc_name'), values, reduce((lambda x, y: x + y), values))
 	return redirect("/")
@@ -63,7 +63,7 @@ def edit_alloc():
 def add_alloc():
 	if 'alloc' not in session:
 		session['alloc'] = []
-	values = [float(x) for x in request.args.getlist('alloc_values')]
+	values = [float(x.replace(',', '.')) for x in request.args.getlist('alloc_values')]
 	session['alloc'].append((request.args.get('alloc_name'), values, reduce((lambda x, y: x + y), values)))
 	return redirect("/")
 
@@ -78,7 +78,7 @@ def delete_traveler():
 
 @app.route('/configuration')
 def config():
-	session['km_cost'] = float(request.args.get('km_cost'))
+	session['km_cost'] = float(request.args.get('km_cost').replace(',', '.'))
 	session['departure'] = request.args.get('departure')
 	return redirect("/")
 

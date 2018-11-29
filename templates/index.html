@@ -84,6 +84,35 @@
     <div class="row">
         <div class="col-md-12">
             <h1 class="text-center mt-3">Cocovoit</h1>
+            <hr class="mb-5">
+        </div>
+    </div>
+
+    <div class="row mb-5">
+        <div class="col-md-12">
+            <h2>Configuration</h2>
+            <form action="/configuration" class="form-inline align-items-end">
+                <div class="form-group mr-2" style="flex-direction: column;align-items: baseline;">
+                    <label for="departure_input">
+                        <small>Ville de départ</small>
+                    </label>
+                    <input type="text" name="departure" class="form-control" id="departure_input"
+                           value="{{ trajet.departure }}" required>
+                </div>
+                <div class="form-group mr-2" style="flex-direction: column;align-items: baseline;">
+                    <label for="km_cost_input">
+                        <small>Coût au kilomètre</small>
+                    </label>
+                    <div class="input-group">
+                        <input type="text" name="km_cost" class="form-control" id="km_cost_input" required
+                               value="{{ trajet.km_cost }}">
+                        <div class="input-group-append">
+                            <div class="input-group-text">€/km</div>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Valider</button>
+            </form>
         </div>
     </div>
 
@@ -122,9 +151,9 @@
                 {% if (lines|length) < 5 %}
                     <tr>
                         <form action="/ajouter-voyageur" method="get">
-                            <td><input type="text" class="form-control" name="voyageurs"></td>
-                            <td><input type="text" class="form-control" name="arrets"></td>
-                            <td><input type="text" class="form-control" name="distances"></td>
+                            <td><input type="text" class="form-control" name="voyageurs" required></td>
+                            <td><input type="text" class="form-control" name="arrets" required></td>
+                            <td><input type="number" class="form-control" name="distances" required></td>
                             <td></td>
                             <td>
                                 <button type="submit" class="btn btn-primary">Ajouter</button>
@@ -134,34 +163,6 @@
                 {% endif %}
 
             </table>
-        </div>
-    </div>
-
-    <div class="row mb-5">
-        <div class="col-md-12">
-            <h2>Configuration</h2>
-            <form action="/configuration" class="form-inline align-items-end">
-                <div class="form-group mr-2" style="flex-direction: column;align-items: baseline;">
-                    <label for="departure_input">
-                        <small>Ville de départ</small>
-                    </label>
-                    <input type="text" name="departure" class="form-control" id="departure_input"
-                           value="{{ trajet.departure }}" required>
-                </div>
-                <div class="form-group mr-2" style="flex-direction: column;align-items: baseline;">
-                    <label for="km_cost_input">
-                        <small>Coût au kilomètre</small>
-                    </label>
-                    <div class="input-group">
-                        <input type="text" name="km_cost" class="form-control" id="km_cost_input"
-                               value="{{ trajet.km_cost }}">
-                        <div class="input-group-append">
-                            <div class="input-group-text">€/km</div>
-                        </div>
-                    </div>
-                </div>
-                <button type="submit" class="btn btn-primary">Valider</button>
-            </form>
         </div>
     </div>
 
@@ -313,6 +314,11 @@
             </div>
         </div>
     {% endif %}
+
+<footer class="text-center mb-3">
+    <hr>
+    Réalisé par Clément Bosc et Cédric Lespagnol
+</footer>
 
 </div>
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"

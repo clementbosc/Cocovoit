@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cocovoit</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+          integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css"
+          integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+    <style>
+        .alloc_submit_button[disabled]{
+            color: #828282!important;
+            cursor: default!important;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <h1 class="text-center mt-3">Cocovoit</h1>
+        </div>
+    </div>
+
+
+    <div class="row">
+        <div class="col-md-12">
+            <h2>Étapes du trajet</h2>
+            <table class="table">
+                <tr>
+                    <th>Voyageur</th>
+                    <th>Ville</th>
+                    <th>Distance au départ</th>
+                    <th></th>
+                </tr>
+                {% for i in range(lines|length) %}
+                    <tr>
+                        <form action="/modifier-voyageur" method="get">
+                            <td><input type="text" name="voyageurs" class="form-control" value="{{ lines[i][0] }}"></td>
+                            <td><input type="text" name="arrets" class="form-control" value="{{ lines[i][1] }}"></td>
+                            <td><input type="text" name="distances" class="form-control" value="{{ lines[i][2] }}"></td>
+                            <td>
+                                <input type="hidden" name="id" value="{{ i }}">
+                                <a href="/supprimer-voyageur?id={{ i }}" class=""><i class="fas fa-trash"></i></a>
+                                <button type="submit" class="text-primary" style="background: none; border: none; outline: none; cursor: pointer;"><i class="fas fa-check"></i>
+                                </button>
+                                <!--<a data-id="{{ i }}" class="edit-line-btn"></a>-->
+                            </td>
+                        </form>
+
+                    </tr>
+                {% endfor %}
+
+                {% if (lines|length) < 5 %}
+                    <tr>
+                        <form action="/ajouter-voyageur" method="get">
+                            <td><input type="text" class="form-control" name="voyageurs"></td>
+                            <td><input type="text" class="form-control" name="arrets"></td>
+                            <td><input type="text" class="form-control" name="distances"></td>
+                            <td>
+                                <button type="submit" class="btn btn-primary">Ajouter</button>
+                            </td>
+                        </form>
+                    </tr>
+                {% endif %}
+
+            </table>
+        </div>
+    </div>
+
+    <div class="row mb-5">
+        <div class="col-md-12">
+            <h2>Configuration</h2>
+            <form action="/configuration" class="form-inline align-items-end">
+                <div class="form-group mr-2" style="flex-direction: column;align-items: baseline;">
+                    <label for="km_cost_input">
+                        <small>Coût au kilomètre</small>
+                    </label>
+                    <div class="input-group">
+                        <input type="text" name="km_cost" class="form-control" id="km_cost_input"
+                               value="{{ s['km_cost'] }}">
+                        <div class="input-group-append">
+                            <div class="input-group-text">€/km</div>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Valider</button>
+            </form>
+        </div>
+    </div>
+
+    {% if lines|length > 1 %}
+        <div class="row">
+            <div class="col-md-12">
+                <h2>Partage des coûts</h2>
+
+                <table class="table">
+                    <tr>
+                        <th></th>
+                        {% for i in range(lines|length) %}
+                            <th>{{ lines[i][0] }}</th>
+                        {% endfor %}
+                        <th>Cout total</th>
+                        <th>Noyau ?</th>
+                    </tr>
+                    <tr>
+                        <th>Allocation par séparation</th>
+                        {% for s in trajet.separation_costs() %}
+                            <td>{{ s|round(2) }} €</td>
+                        {% endfor %}
+                        <td>{{ trajet.total_cost()|round(2) }} €</td>
+                        <td>
+                            <span>{{ trajet.in_kernel(trajet.separation_costs())[0] }}</span>
+                            {% if trajet.in_kernel(trajet.separation_costs())[0] == False %}
+                                &nbsp;
+                                <i class="fas fa-question-circle" data-toggle="tooltip" data-placement="top"
+                                   title="{{ trajet.in_kernel(trajet.separation_costs())[1] }}"></i>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Allocation à couts proportionnels</th>
+                        {% for s in trajet.proportional_costs() %}
+                            <td>{{ s|round(2) }} €</td>
+                        {% endfor %}
+                        <td>{{ trajet.total_cost()|round(2) }} €</td>
+                        <td>
+                            <span>{{ trajet.in_kernel(trajet.proportional_costs())[0] }}</span>
+                            {% if trajet.in_kernel(trajet.proportional_costs())[0] == False %}
+                                &nbsp;
+                                <i class="fas fa-question-circle" data-toggle="tooltip" data-placement="top"
+                                   title="{{ trajet.in_kernel(trajet.proportional_costs())[1] }}"></i>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    {% for a in range(allocs|length) %}
+                        <tr>
+                            <form action="/modifier-allocation" method="get">
+                                <input type="hidden" class="total_cost_input" data-id="{{ a }}" value="{{ allocs[a][2]|round(2) }}">
+
+                                <th><input type="text" class="form-control" name="alloc_name"
+                                           value="{{ allocs[a][0] }}"></th>
+                                {% for v in allocs[a][1] %}
+                                    <td><input type="text" class="form-control alloc_values" data-id="{{ a }}" name="alloc_values"
+                                               value="{{ v|round(2) }}"></td>
+                                {% endfor %}
+                                <td>
+                                    <span class="total_cost {{ 'text-danger' if allocs[a][2] != trajet.total_cost() else '' }}" data-id="{{ a }}">{{ allocs[a][2]|round(2) }} €</span>
+                                </td>
+                                <td>
+                                    <input type="hidden" name="id" value="{{ a }}">
+
+                                    <span>{{ trajet.in_kernel(allocs[a][1])[0] }}</span>
+                                    {% if trajet.in_kernel(allocs[a][1])[0] == False %}
+                                        &nbsp;
+                                        <i class="fas fa-question-circle" data-toggle="tooltip" data-placement="top"
+                                           title="{{ trajet.in_kernel(allocs[a][1])[1] }}"></i>
+                                    {% endif %}
+                                    <br>
+                                    <a href="supprimer-allocation?id={{ a }}"><i class="fas fa-trash"></i></a>
+                                    <button type="submit" class="text-primary alloc_submit_button" data-id="{{ a }}" style="background: none; border: none; outline: none; cursor: pointer;"><i class="fas fa-check"></i>
+                                    </button>
+                                </td>
+                            </form>
+
+                        </tr>
+                    {% endfor %}
+
+
+                    <tr>
+                        <th colspan="{{ lines|length + 3 }}">Ajouter une allocation personnalisée</th>
+                    </tr>
+                    <tr>
+                        <form action="/ajouter-allocation" method="get">
+                            <input type="hidden" class="total_cost_input" data-id="new" value="0.0">
+                            <th>
+                                <input type="text" class="form-control" name="alloc_name"
+                                       placeholder="Nom de l'allocation" required>
+                            </th>
+
+                            {% for s in range(lines|length) %}
+                                <td><input type="text" class="form-control alloc_values" name="alloc_values" data-id="new"
+                                           placeholder="Part de {{ lines[s][0] }}" required></td>
+                            {% endfor %}
+                            <td>
+                                <span class="total_cost" data-id="new">0.0 €</span>
+                            </td>
+                            <td>
+                                <button type="submit" class="btn btn-primary alloc_submit_button" data-id="new" disabled>Ajouter</button>
+                            </td>
+                        </form>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    {% endif %}
+
+</div>
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
+        integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"
+        integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
+        crossorigin="anonymous"></script>
+
+<script>
+    var total_cost = {{ trajet.total_cost() }}
+    $('[data-toggle="tooltip"]').tooltip();
+
+    $('.alloc_values').on('input', function(){
+        var sum = 0.0;
+        var id = $(this).data('id');
+        $('.alloc_values[data-id="'+id+'"]').each(function(k, v){
+            var value = $(v).val();
+            if(value != '')
+                sum += parseFloat($(v).val())
+        });
+
+        $('.total_cost[data-id="'+id+'"]').html(sum+' €');
+        $('.total_cost_input[data-id="'+id+'"]').val(sum);
+        if (sum == total_cost){
+            $('.total_cost[data-id="'+id+'"]').removeClass('text-danger')
+            $('.alloc_submit_button[data-id="'+id+'"]').prop('disabled', false);
+        }else{
+            $('.total_cost[data-id="'+id+'"]').addClass('text-danger')
+            $('.alloc_submit_button[data-id="'+id+'"]').prop('disabled', true);
+        }
+    });
+</script>
+
+</body>
+</html>
